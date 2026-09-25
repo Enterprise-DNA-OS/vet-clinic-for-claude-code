@@ -1,11 +1,73 @@
 [
   {
-    "name": "example",
-    "title": "TODO(author): the first document this industry must produce",
-    "for_each": "select gen_random_uuid() as id, 'Example' as name",
+    "name": "vaccination-certificate",
+    "title": "Vaccination certificate",
+    "for_each": "select p.id, p.name from patients p where p.status = 'active' and exists (select 1 from vaccinations v where v.patient_id = p.id)",
     "file": "name",
     "sections": [
-      { "title": "Details", "sql": "select 'replace me' as item, $1::text as record_id" }
+      {
+        "title": "Patient",
+        "sql": "select p.name, p.species, p.breed, p.sex, p.dob, coalesce(p.microchip, 'not on record') as microchip, c.name as owner, c.address, c.suburb from patients p join clients c on c.id = p.client_id where p.id = $1"
+      },
+      {
+        "title": "Vaccinations on record",
+        "note": "Recorded under the veterinarian who gave or directed each vaccination.",
+        "sql": "select v.vaccine, v.given_on, v.due_on as next_due, s.name as veterinarian, s.registration_number from vaccinations v join staff s on s.id = v.staff_id where v.patient_id = $1 order by v.given_on desc"
+      }
+    ]
+  },
+  {
+    "name": "client-statement",
+    "title": "Statement of account",
+    "for_each": "select c.id, c.name from clients c where exists (select 1 from invoices i where i.client_id = c.id and i.status = 'issued')",
+    "file": "name",
+    "sections": [
+      {
+        "title": "Invoices outstanding",
+        "sql": "select i.ref, i.patient, i.issued_on, i.due_on, round(i.total_cents / 100.0, 2) as total_nzd, i.state from v_invoices i where i.client_id = $1 and i.status = 'issued' order by i.issued_on"
+      },
+      {
+        "title": "Recent payments",
+        "sql": "select i.ref, i.patient, i.paid_on, round(i.total_cents / 100.0, 2) as total_nzd from v_invoices i where i.client_id = $1 and i.status = 'paid' order by i.paid_on desc limit 6"
+      }
+    ]
+  },
+  {
+    "name": "clinical-history",
+    "title": "Clinical history",
+    "for_each": "select p.id, p.name from patients p where exists (select 1 from consults cn where cn.patient_id = p.id)",
+    "file": "name",
+    "sections": [
+      {
+        "title": "Patient",
+        "sql": "select p.name, p.species, p.breed, p.sex, p.dob, coalesce(p.microchip, 'not on record') as microchip, p.status, c.name as owner from patients p join clients c on c.id = p.client_id where p.id = $1"
+      },
+      {
+        "title": "Consults",
+        "note": "For referrals and insurance claims. The full record, oldest first.",
+        "sql": "select cn.on_date, cn.type, cn.reason, cn.weight_kg, cn.notes, cn.vet from v_consults cn where cn.patient_id = $1 and cn.status = 'completed' order by cn.on_date"
+      },
+      {
+        "title": "Weights",
+        "sql": "select cn.on_date, cn.weight_kg from consults cn where cn.patient_id = $1 and cn.weight_kg is not null order by cn.on_date"
+      }
+    ]
+  },
+  {
+    "name": "drug-register",
+    "title": "Controlled drug register",
+    "for_each": "select i.id, i.code || ' ' || i.name as name from items i where i.controlled",
+    "file": "name",
+    "sections": [
+      {
+        "title": "Register",
+        "note": "Every receipt, dispensing and witnessed disposal, with the running balance (Misuse of Drugs Regulations 1977).",
+        "sql": "select r.entry_on, r.movement, r.qty, r.balance_after, p.name as patient, cn.ref as consult, s.name as staff, r.witness, r.note from drug_register r left join patients p on p.id = r.patient_id left join consults cn on cn.id = r.consult_id join staff s on s.id = r.staff_id where r.item_id = $1 order by r.entry_on, r.created_at"
+      },
+      {
+        "title": "Reconciliation",
+        "sql": "select b.register_qty, b.shelf_qty, b.discrepancy, b.last_entry_on from v_register_balances b where b.item_id = $1"
+      }
     ]
   }
 ]

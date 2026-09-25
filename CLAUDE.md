@@ -4,8 +4,10 @@ This file is the brain. Claude Code reads it at the start of every session. It s
 
 ## Who this is for
 
-- **Business:** [YOUR BUSINESS]
+- **Business:** [YOUR CLINIC]
 - **Operator:** [YOUR NAME], [your role]
+- **Who reconciles the controlled drug register, and how often:** [name, cadence]
+- **Who runs the recall list:** [name, cadence]
 - **What matters most:** [the one or two outcomes you care about]
 
 Fill this in once. A worker with context knows. A worker without it guesses.
@@ -22,9 +24,31 @@ Fill this in once. A worker with context knows. A worker without it guesses.
 
 | When the operator asks for... | Use this |
 |---|---|
-| <!-- TODO(author): one row per slash command --> | `/...` |
+| What needs my attention, what's wrong, morning check | `/attention` |
+| Today's appointments, the day sheet, the week's book | `/book` |
+| Everything about an animal, its history, its weight | `/patient` |
+| Everything about an owner, their account | `/client` |
+| The owners list | `/clients` |
+| The staff, whose certificate is due, who billed what | `/team` |
+| See a patient, charge a consult, finish the record | `/consult` |
+| Who is due a vaccination, the recall run | `/reminders` |
+| Who have we quietly lost | `/lapsed` |
+| Who owes money | `/debtors` |
+| What have we finished but not billed | `/unbilled` |
+| What is low, out, or expired on the shelf; receive stock | `/stock` |
+| The controlled drugs, the register, a disposal | `/register` |
+| The Monday review | `/weekly-review` |
+| Are we compliant, check the rules | `/compliance` |
+| A new owner and animal | `/new-patient` |
+| Note a call, a promise to pay, a decision | `/log` |
+| Draft the recall messages | `/draft-reminder-letters` |
+| Draft an estimate for a procedure | `/draft-estimate` |
+| Draft a referral letter | `/draft-referral` |
+| Bring the data across from ezyVet | `/import` |
+| Change a field, a rule, a stage, a document | `/customise` |
+| A new dashboard page | `/new-view` |
 
-If an ask fits nothing here, run the CLI directly (`npm run <cli> -- --help`) and then propose a new command for it.
+If an ask fits nothing here, run the CLI directly (`npm run vet -- help`) and then propose a new command for it.
 
 ## Hard rules
 

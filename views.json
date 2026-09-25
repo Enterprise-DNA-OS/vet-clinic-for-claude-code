@@ -2,12 +2,49 @@
   {
     "name": "week",
     "title": "This week",
-    "subtitle": "Vet Clinic for Claude Code: what needs attention, rendered by npm run view",
+    "subtitle": "Vet Clinic for Claude Code: the book and what needs attention, rendered by npm run view",
     "sections": [
       {
-        "title": "Needs attention",
-        "note": "TODO(author): point this at the industry's attention view (overdue, stuck, quiet).",
-        "sql": "select 'replace me' as item, 'TODO(author)' as why"
+        "title": "Needs a decision",
+        "note": "Worst first. The controlled drug register outranks everything.",
+        "sql": "select reason, label, who, place, detail from v_attention order by rank, days desc nulls last limit 15"
+      },
+      {
+        "title": "Today",
+        "sql": "select ref, starts_at as at, patient, client as owner, vet, type, reason, state from v_appointments where on_date = current_date and status = 'scheduled' order by starts_at"
+      },
+      {
+        "title": "The week ahead",
+        "sql": "select ref, on_date, starts_at as at, patient, client as owner, vet, type, reason from v_appointments where status = 'scheduled' and on_date between current_date + 1 and current_date + 7 order by on_date, starts_at"
+      },
+      {
+        "title": "Recalls due in the next 30 days",
+        "note": "Overdue first. 'booked' empty means nobody has rung them yet.",
+        "sql": "select patient, species, client as owner, phone, vaccine, due_on, next_appt_on as booked, state from v_reminders where due_on <= current_date + 30 order by due_on"
+      }
+    ]
+  },
+  {
+    "name": "money",
+    "title": "The money",
+    "subtitle": "Vet Clinic for Claude Code: what is owed, unbilled and on the shelf, rendered by npm run view",
+    "sections": [
+      {
+        "title": "Owing",
+        "sql": "select ref, client, patient, issued_on, due_on, round(total_cents / 100.0, 2) as total_nzd, state from v_invoices where status = 'issued' order by due_on"
+      },
+      {
+        "title": "Unbilled work",
+        "note": "Completed consults with charges and no invoice. This is the write-off queue if nobody acts.",
+        "sql": "select ref, on_date, patient, client as owner, vet, round(value_cents / 100.0, 2) as value_nzd from v_consults where state = 'unbilled' and status = 'completed' order by on_date"
+      },
+      {
+        "title": "Billed in the last 28 days, by vet",
+        "sql": "select name as vet, consults_last_28d as consults, round(billed_last_28d_cents / 100.0, 2) as billed_nzd from v_staff where role = 'vet' and status = 'active' order by billed_last_28d_cents desc"
+      },
+      {
+        "title": "Shelf alerts",
+        "sql": "select code, name, stock_qty as on_hand, unit, reorder_at, batch_no, batch_expires_on, state from v_stock where state <> 'ok' order by state"
       }
     ]
   }
